@@ -1,19 +1,18 @@
-from dlgo.gotypes import Point
+from alphago.env.gotypes import Point
+
+__all__ = [
+    "is_point_an_eye",
+]
 
 
 def is_point_an_eye(board, point, color):
-    """
-    xxx   xxx   ex | xe
-    xex   xex   x  |  x    e = eye
-    xxo   xxx   ex | xe
-    """
     if board.get(point) is not None:
         return False
-    for neighbor in point.neighbors():
-        if board.is_on_grid(neighbor):
-            neighbor_color = board.get(neighbor)
-            if neighbor_color != color:
-                return False
+    for neighbor in board.neighbors(point):
+        neighbor_color = board.get(neighbor)
+        if neighbor_color != color:
+            return False
+
     friendly_corners = 0
     off_board_corners = 0
     corners = [
