@@ -50,7 +50,7 @@ for layer in network_layers:
     model.add(layer)
 model.add(Dense(num_classes, activation="softmax"))
 model.compile(loss="categorical_crossentropy", optimizer="sgd", metrics=["accuracy"])
-print(len(generator.get_num_samples()))
+print(generator.get_num_samples())
 epochs = 5
 batch_size = 128
 model.fit_generator(
