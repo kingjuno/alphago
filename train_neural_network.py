@@ -23,7 +23,7 @@ class GoNet(nn.Module):
     def __init__(self, input_shape, num_classes):
         super(GoNet, self).__init__()
         self.conv_layers = nn.Sequential(
-            nn.Conv2d(input_shape[0], 48, kernel_size=7),
+            nn.Conv2d(input_shape, 48, kernel_size=7),
             nn.ReLU(),
             nn.ZeroPad2d(padding=2),
             nn.Conv2d(48, 32, kernel_size=5),
@@ -37,7 +37,7 @@ class GoNet(nn.Module):
         )
         self.flatten = nn.Flatten()
         self.dense_layers = nn.Sequential(
-            nn.Linear(32 * 19 * 19, 512), nn.ReLU(), nn.Linear(512, num_classes)
+            nn.Linear(5408, 512), nn.ReLU(), nn.Linear(512, num_classes)
         )
 
     def forward(self, x):
