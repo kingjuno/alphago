@@ -39,7 +39,6 @@ class GoDataSet(Dataset):
             self.encoder = _OnePlaneEncoder
         else:
             raise NotImplementedError(f"Available encoders: {['oneplane']}")
-        self.encoder = encoder
         self.no_of_games = no_of_games
         self.dataset_dir = dataset_dir
         self.total_frames = None
