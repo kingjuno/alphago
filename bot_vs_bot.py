@@ -37,13 +37,27 @@ class GoNet(nn.Module):
 model = GoNet().to(device)
 model.load_state_dict(torch.load("weights/go1.pth"))
 model.eval()
+
+
 bots = {
     gotypes.Player.black: agents.HumanAgent(),
-    gotypes.Player.white: agents.DLAgent(model, OnePlaneEncoder((19,19)))
+    gotypes.Player.white: agents.HumanAgent(),
     # gotypes.Player.white: agents.RandomBot(),
     # gotypes.Player.white: agents.MCTSAgent(1000, 0.8),
 }
 
+for i in range(10):
+    print_board(game.board)
+    bot_move = bots[game.next_player].select_move(game)
+    print_move(game.next_player, bot_move)
+    game = game.apply_move(bot_move)
+
+bots = {
+    gotypes.Player.black: agents.HumanAgent(),
+    gotypes.Player.white: agents.DLAgent(model, OnePlaneEncoder((19, 19))),
+    # gotypes.Player.white: agents.RandomBot(),
+    # gotypes.Player.white: agents.MCTSAgent(1000, 0.8),
+}
 while not game.is_over():
     time.sleep(0.3)
     # print(chr(27)+"[2J")
