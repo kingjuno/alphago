@@ -1,1 +1,1 @@
-from .sgf import *
+from .data_encoders import _OnePlaneEncoder

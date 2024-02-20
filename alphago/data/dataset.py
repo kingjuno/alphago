@@ -3,13 +3,13 @@ import random
 
 import numpy as np
 import torch
+from sgfmill import sgf, sgf_moves
 from torch.utils.data import Dataset
 from tqdm import tqdm
 
 from alphago.data.download_dataset import GoDatasetUtils
-from alphago.data.sgf import Sgf_game, get_handicap
-from alphago.env.go_board import Move
-from alphago.env.gotypes import Point
+
+from . import _OnePlaneEncoder
 
 
 class GoDataSet(Dataset):
@@ -35,6 +35,10 @@ class GoDataSet(Dataset):
         """
         random.seed(seed)
         self.game = game
+        if encoder == 'oneplane':
+            self.encoder = _OnePlaneEncoder
+        else:
+            raise NotImplementedError(f"Available encoders: {['oneplane']}")
         self.encoder = encoder
         self.no_of_games = no_of_games
         self.dataset_dir = dataset_dir
@@ -60,34 +64,24 @@ class GoDataSet(Dataset):
 
         pool.close()
         pool.join()
-        self.features = torch.tensor(np.array(features))
+        self.features = torch.tensor(np.array(features)).float()
         self.labels = torch.tensor(np.array(labels))
 
     def process_sgf_file(self, file):
         features = []
         labels = []
-        with open(file, "r") as f:
-            game_string = "".join(f.readlines())
-        sgf = Sgf_game.from_string(game_string)
-
-        game_state, first_move_done = get_handicap(sgf)
-
-        for item in sgf.main_sequence_iter():
-            color, move_tuple = item.get_move()
-            point = None
-            if color is not None:
-                if move_tuple is not None:
-                    row, col = move_tuple
-                    point = Point(row + 1, col + 1)
-                    move = Move.play(point)
-                else:
-                    move = Move.pass_turn()
-                if first_move_done and point is not None:
-                    features.append(self.encoder.encode(game_state))
-                    labels.append(self.encoder.encode_point(point))
-                game_state = game_state.apply_move(move)
-                first_move_done = True
-
+        with open(file) as f:
+            contents = f.read().encode("ascii")
+            game = sgf.Sgf_game.from_bytes(contents)
+            board, plays = sgf_moves.get_setup_and_moves(game)
+            for color, move in plays:
+                if move is None:
+                    continue
+                row, col = move
+                tp = self.encoder(board, move, color)
+                features.append(tp[0])
+                labels.append(tp[1])
+                board.play(row, col, color)
         return features, labels
 
     @staticmethod
