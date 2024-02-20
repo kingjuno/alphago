@@ -1,13 +1,13 @@
 # tag::train_generator_imports[]
 from __future__ import absolute_import
 
+from keras.callbacks import ModelCheckpoint  # <1>
+# tag::small_network[]
+from keras.layers import Activation, Conv2D, Dense, Flatten, ZeroPadding2D
+from keras.models import Sequential
+
 from alphago.encoders import OnePlaneEncoder
 from alphago.test.parallel_processor import GoDataProcessor
-from keras.callbacks import ModelCheckpoint  # <1>
-from keras.layers import Conv2D, ZeroPadding2D
-# tag::small_network[]
-from keras.layers import Activation, Dense, Flatten
-from keras.models import Sequential
 
 
 def layers(input_shape):
@@ -34,7 +34,7 @@ def layers(input_shape):
 
 go_board_rows, go_board_cols = 19, 19
 num_classes = go_board_rows * go_board_cols
-num_games = 1000
+num_games = 100
 
 encoder = OnePlaneEncoder((go_board_rows, go_board_cols))  # <1>
 
@@ -50,7 +50,7 @@ for layer in network_layers:
     model.add(layer)
 model.add(Dense(num_classes, activation="softmax"))
 model.compile(loss="categorical_crossentropy", optimizer="sgd", metrics=["accuracy"])
-
+print(len(generator.get_num_samples()))
 epochs = 5
 batch_size = 128
 model.fit_generator(
