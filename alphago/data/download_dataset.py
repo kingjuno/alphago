@@ -18,17 +18,14 @@ class GoDatasetUtils:
         "cwi-minigo-9x9": "https://homepages.cwi.nl/~aeb/go/games/games/other_sizes/9x9/Minigo/",
         "cwi-seigen-9x9": "https://homepages.cwi.nl/~aeb/go/games/games/other_sizes/9x9/Go_Seigen/",
         "cwi-misc-9x9": "https://homepages.cwi.nl/~aeb/go/games/games/other_sizes/9x9/Misc/",
-        "cwi-nhk-9x9": "https://homepages.cwi.nl/~aeb/go/games/games/other_sizes/9x9/NHK/",
-        "cwi-propairgo-9x9": "https://homepages.cwi.nl/~aeb/go/games/games/other_sizes/9x9/ProPairgo/",
-        "cwi-computer-9x9": "https://homepages.cwi.nl/~aeb/go/games/games/other_sizes/9x9/computer/",
-        "cwi-all": "https://homepages.cwi.nl/~aeb/go/games/index.html",
+        # "cwi-nhk-9x9": "https://homepages.cwi.nl/~aeb/go/games/games/other_sizes/9x9/NHK/",
+        # "cwi-propairgo-9x9": "https://homepages.cwi.nl/~aeb/go/games/games/other_sizes/9x9/ProPairgo/",
+        # "cwi-computer-9x9": "https://homepages.cwi.nl/~aeb/go/games/games/other_sizes/9x9/computer/",
+        # "cwi-all": "https://homepages.cwi.nl/~aeb/go/games/index.html",
     }
     EXTENSIONS = (".tar.gz", ".sgf", ".tgz")
 
     def __init__(self, name="kgs", dataset_dir="dataset"):
-        assert (
-            name in self.DATA_URLS.keys()
-        ), f"Available games: {list(self.DATA_URLS.keys())}"
         self.name = name
         self.dataset_dir = dataset_dir
 
@@ -71,6 +68,9 @@ class GoDatasetUtils:
                 zip_ref.extractall(path=save_dir)
 
     def download_dataset(self):
+        assert (
+            self.name in self.DATA_URLS.keys()
+        ), f"Available games: {list(self.DATA_URLS.keys())}. You can also paste your custom dataset to the dataset folder"
         url = self.DATA_URLS[self.name]
         save_dir = os.path.join(self.dataset_dir, self.name)
         os.makedirs(save_dir, exist_ok=True)

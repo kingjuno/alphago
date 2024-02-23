@@ -1,69 +1,52 @@
-import time
-
+import copy
 import torch
-from torch import nn
 
 from alphago import agents
-from alphago.encoders.one_plane import OnePlaneEncoder
+from alphago import encoders
 from alphago.env import go_board, gotypes
+from alphago.env.scoring import compute_game_result
 from alphago.env.utils import print_board, print_move
+from alphago.networks import GoNet
 
 device = "cuda"
-board_size = 19
+board_size = 5
 game = go_board.GameState.new_game(board_size=board_size)
+encoder = encoders.OnePlaneEncoder((board_size, board_size))
+# encoder = encoders.SimpleEncoder((board_size, board_size))
 
-
-class GoNet(nn.Module):
-    def __init__(self):
-        super(GoNet, self).__init__()
-        self.conv1 = nn.Conv2d(1, 64, kernel_size=3, padding=1)
-        self.conv2 = nn.Conv2d(64, 128, kernel_size=3, padding=1)
-        self.conv3 = nn.Conv2d(128, 128, kernel_size=3, padding=1)
-        self.fc1 = nn.Linear(128 * 19 * 19, 128)
-        self.fc2 = nn.Linear(128, 19 * 19)
-        self.softmax = nn.Softmax(dim=1)
-
-    def forward(self, x):
-        x = torch.relu(self.conv1(x))
-        x = torch.relu(self.conv2(x))
-        x = torch.relu(self.conv3(x))
-        x = x.view(-1, 128 * 19 * 19)
-        x = torch.relu(self.fc1(x))
-        x = self.fc2(x)
-        x = self.softmax(x)
-        return x
-
-
-model = GoNet().to(device)
-model.load_state_dict(torch.load("weights/go1.pth"))
+model = GoNet(board_size, 11).to(device)
 model.eval()
 
 
-bots = {
-    gotypes.Player.black: agents.HumanAgent(),
-    gotypes.Player.white: agents.HumanAgent(),
-    # gotypes.Player.white: agents.RandomBot(),
-    # gotypes.Player.white: agents.MCTSAgent(1000, 0.8),
-}
+AGENTS = [
+    agents.HumanAgent(),
+    agents.DLAgent(model, encoder),
+    agents.FastRandomBot(),
+    agents.MCTSAgent(2000, 0.8),
+    agents.PGAgent(model, encoder)
+]
 
-for i in range(10):
-    print_board(game.board)
-    bot_move = bots[game.next_player].select_move(game)
-    print_move(game.next_player, bot_move)
-    game = game.apply_move(bot_move)
 
-bots = {
-    gotypes.Player.black: agents.HumanAgent(),
-    gotypes.Player.white: agents.DLAgent(model, OnePlaneEncoder((19, 19))),
-    # gotypes.Player.white: agents.RandomBot(),
-    # gotypes.Player.white: agents.MCTSAgent(1000, 0.8),
-}
-while not game.is_over():
-    time.sleep(0.3)
-    # print(chr(27)+"[2J")
-    print_board(game.board)
-    bot_move = bots[game.next_player].select_move(game)
-    print_move(game.next_player, bot_move)
-    game = game.apply_move(bot_move)
-print("------------")
-print(game.winner())
+def simulate_game(black_player, white_player):
+    black_player = copy.deepcopy(
+        black_player
+    )  # ensure both players are different objects
+    game = go_board.GameState.new_game(board_size=board_size)
+    agents = {
+        gotypes.Player.black: black_player,
+        gotypes.Player.white: white_player,
+    }
+    while not game.is_over():
+        print_board(game.board)
+        next_move = agents[game.next_player].select_move(game)
+        game = game.apply_move(next_move)
+        game_result = compute_game_result(game)
+    return game_result.winner
+
+
+wins = {gotypes.Player.black: 0, gotypes.Player.white: 0}
+for i in range(3):
+    winner = simulate_game(AGENTS[3], AGENTS[0])
+    wins[winner] += 1
+    print(winner)
+print(wins)

@@ -1,4 +1,6 @@
 __pycache__
 dataset
 TODO
-weights/*
+*.pth
+*.npy
+*.npz

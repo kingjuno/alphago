@@ -1,8 +1,6 @@
 import numpy as np
 import torch
 
-from alphago import encoders
-from alphago.env import go_board
 from alphago.env.go_board import Move
 from alphago.env.gotypes import Point
 
@@ -11,15 +9,16 @@ from .add_ons import is_point_an_eye
 
 
 class DLAgent(Agent):
-    def __init__(self, model, encoder):
+    def __init__(self, model, encoder, weights=None):
         Agent.__init__(self)
         self.model = model
         self.encoder = encoder
+        if weights:
+            self.model.load_state_dict(torch.load(weights))
 
     def predict(self, game_state):
-        encoded_state = self.encoder.encode(game_state)
-        print(encoded_state.shape)
-        board = torch.tensor([encoded_state], requires_grad=False).cuda().float()
+        encoded_state = np.array(self.encoder.encode(game_state))
+        board = torch.tensor(encoded_state, requires_grad=False).cuda().float()
         return self.model(board).detach().cpu().numpy()
 
     def select_move(self, game_state):
