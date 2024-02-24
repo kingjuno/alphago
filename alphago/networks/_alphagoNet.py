@@ -61,5 +61,7 @@ class AlphaGoNet(nn.Module):
 
         pi = self.fc3(s)
         v = self.fc4(s)
-
-        return F.log_softmax(pi, dim=1), torch.tanh(v)
+        if self.training:
+            return F.log_softmax(pi, dim=1), torch.tanh(v)
+        else:
+            return F.softmax(pi, dim=1), torch.tanh(v)

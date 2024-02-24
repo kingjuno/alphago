@@ -11,7 +11,7 @@ else:
     device = torch.device("cpu")
 
 BOARD_SIZE = 9
-training_dataset = GoDataSet(game="go9", encoder="oneplane", no_of_games=8600)
+training_dataset = GoDataSet(game="go9", encoder="oneplane", no_of_games=8)
 test_dataset = GoDataSet(
     game="go9", encoder="oneplane", no_of_games=100, avoid=training_dataset.games
 )
@@ -69,14 +69,15 @@ def test(model, device, test_loader):
 
 
 model = AlphaGoNet((1, BOARD_SIZE, BOARD_SIZE))
+model.load_state_dict(torch.load("experiment/weights/go2.pth"))
 if torch.cuda.is_available():
     model = model.cuda()
 optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.5)
 scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=25, gamma=0.1)
 losses = []
 accuracies = []
-for epoch in range(0, 100):
-    losses.extend(train(model, device, train_loader, optimizer, epoch))
+for epoch in range(0, 10):
+    # losses.extend(train(model, device, train_loader, optimizer, epoch))
     accuracies.append(test(model, device, train_loader))
     scheduler.step()
 
