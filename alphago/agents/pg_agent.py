@@ -7,11 +7,21 @@ from alphago.env import go_board
 from . import Agent
 
 
+def clip_prob(probs):
+    min_p = 1e-5
+    max_p = 1 - min_p
+    clipped_probs = np.clip(probs, min_p, max_p)
+    clipped_probs = clipped_probs / np.sum(clipped_probs)
+
+    return clipped_probs
+
+
 class PGAgent(Agent):
-    def __init__(self, model, encoder, model_path=None):
+    def __init__(self, model, encoder, temperature=0.01, model_path=None):
         self.model = model
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.encoder = encoder
+        self.temperature = temperature
         self.buffer = None
         if model_path:
             self.model_path = model_path
@@ -26,12 +36,16 @@ class PGAgent(Agent):
         X = torch.tensor(board_tensor, dtype=torch.float32).unsqueeze(0).to(self.device)
         move_probs, _ = self.model(X)
         num_moves = self.encoder.board_height * self.encoder.board_width
+        if np.random.random() < self.temperature:
+            move_probs = np.ones(num_moves) / num_moves
+        else:
+            move_probs = clip_prob(move_probs.cpu().detach().view(-1).numpy())
         candidates = np.arange(num_moves)
         indices = np.random.choice(
             candidates,
             num_moves,
             replace=False,
-            p=move_probs.cpu().detach().view(-1).numpy(),
+            p=move_probs,
         )
         ranked_moves = candidates[indices]
         for _point in ranked_moves:
@@ -46,6 +60,7 @@ class PGAgent(Agent):
         return go_board.Move.pass_turn()
 
     def train(self, cfg, exp):
+        self.model.train()
         optimizer = torch.optim.SGD(self.model.parameters(), lr=cfg.lr)
         criterion = torch.nn.CrossEntropyLoss()
         n = exp.states.shape[0]
@@ -59,10 +74,10 @@ class PGAgent(Agent):
 
         states = torch.Tensor(exp.states).to(self.device)
         y = torch.Tensor(y).to(self.device)
-        self.model.train()
 
         for epoch in range(cfg.epochs):
             # Shuffle the data indices
+            print(f'epoch: {epoch+1}')
             indices = torch.randperm(states.size(0)).split(cfg.batch_size)
 
             for batch_indices in indices:

@@ -53,13 +53,15 @@ class ExperienceBuffer:
             advantages=self.advantages,
         )
 
-    def load_experience(self, path):
+    @classmethod
+    def load_experience(cls, path):
         """Load experiences"""
         data = np.load(path)
-        self.states = data["states"]
-        self.actions = data["actions"]
-        self.rewards = data["rewards"]
-        self.advantages = data["advantages"]
+        states = data["states"]
+        actions = data["actions"]
+        rewards = data["rewards"]
+        advantages = data["advantages"]
+        return cls(states, actions, rewards, advantages)
 
     @classmethod
     def combine_buffers(cls, buffers):

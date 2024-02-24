@@ -19,7 +19,7 @@ class DLAgent(Agent):
     def predict(self, game_state):
         encoded_state = np.array(self.encoder.encode(game_state))
         board = torch.tensor(encoded_state, requires_grad=False).cuda().float()
-        return self.model(board).detach().cpu().numpy()
+        return self.model(board)[0].detach().cpu().numpy()
 
     def select_move(self, game_state):
         num_moves = self.encoder.board_width * self.encoder.board_height
