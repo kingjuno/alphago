@@ -24,12 +24,20 @@ model1.load_state_dict(torch.load("experiment/weights/rlgo1.pth"))
 model1 = model1.cuda()
 model1.eval()
 
+
+model2 = AlphaGoNet((1, board_size, board_size))
+model2.load_state_dict(torch.load("experiment/weights/rlgo1.pth"))
+model2 = model2.cuda()
+model2.eval()
+
+
 AGENTS = [
     agents.HumanAgent(),
     agents.DLAgent(model, encoder),
     agents.FastRandomBot(),
     agents.MCTSAgent(100, 0.8),
     agents.PGAgent(model1, encoder, 0),
+    agents.ValueAgent(model2, encoder, 0)
 ]
 
 
@@ -52,7 +60,7 @@ def simulate_game(black_player, white_player):
 
 wins = {gotypes.Player.black: 0, gotypes.Player.white: 0}
 for i in range(100):
-    winner = simulate_game(AGENTS[4], AGENTS[2])
+    winner = simulate_game(AGENTS[5], AGENTS[1])
     wins[winner] += 1
     print(wins)
 print(wins)
