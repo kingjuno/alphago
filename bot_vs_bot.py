@@ -26,18 +26,23 @@ model1.eval()
 
 
 model2 = AlphaGoNet((1, board_size, board_size))
-model2.load_state_dict(torch.load("experiment/weights/rlgo1.pth"))
+model2.load_state_dict(torch.load("experiment/weights/valuego1.pth"))
 model2 = model2.cuda()
 model2.eval()
 
 
 AGENTS = [
-    agents.HumanAgent(),
-    agents.DLAgent(model, encoder),
-    agents.FastRandomBot(),
-    agents.MCTSAgent(100, 0.8),
-    agents.PGAgent(model1, encoder, 0),
-    agents.ValueAgent(model2, encoder, 0)
+    agents.HumanAgent(), #0
+    agents.DLAgent(model, encoder), #1
+    agents.FastRandomBot(), #2
+    agents.MCTSAgent(100, 0.8), #3
+    agents.PGAgent(model1, encoder, 0), #4
+    agents.ValueAgent(model2, encoder, 0), #5
+    agents.AlphaGoMCTS(
+        agents.DLAgent(model, encoder),
+        agents.PGAgent(model1, encoder, 0),
+        agents.ValueAgent(model2, encoder, 0),
+    )
 ]
 
 
@@ -50,17 +55,21 @@ def simulate_game(black_player, white_player):
         gotypes.Player.black: black_player,
         gotypes.Player.white: white_player,
     }
+    i = 0
     while not game.is_over():
+        i += 1
         # print_board(game.board)
         next_move = agents[game.next_player].select_move(game)
         game = game.apply_move(next_move)
         game_result = compute_game_result(game)
+        print(game_result)
+    print(i)
     return game_result.winner
 
 
 wins = {gotypes.Player.black: 0, gotypes.Player.white: 0}
-for i in range(100):
-    winner = simulate_game(AGENTS[5], AGENTS[1])
+for i in range(1):
+    winner = simulate_game(AGENTS[-1], AGENTS[1])
     wins[winner] += 1
     print(wins)
 print(wins)

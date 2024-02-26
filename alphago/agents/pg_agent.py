@@ -27,6 +27,11 @@ class PGAgent(Agent):
             self.model_path = model_path
             self.model.load_state_dict(torch.load(model_path))
 
+    def predict(self, game_state):
+        encoded_state = np.array(self.encoder.encode(game_state))
+        board = torch.tensor(encoded_state, requires_grad=False).cuda().float()
+        return self.model(board)[0].detach().cpu().numpy()
+
     def set_buffer(self, buffer):
         self.buffer = buffer
 
@@ -77,7 +82,7 @@ class PGAgent(Agent):
 
         for epoch in range(cfg.epochs):
             # Shuffle the data indices
-            print(f'epoch: {epoch+1}')
+            print(f"epoch: {epoch+1}")
             indices = torch.randperm(states.size(0)).split(cfg.batch_size)
 
             for batch_indices in indices:

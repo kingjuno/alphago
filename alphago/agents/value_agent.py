@@ -9,7 +9,7 @@ from . import Agent
 
 class ValueAgent(Agent):
     def __init__(
-        self, model, encoder, temperature, policy="eps-greedy", model_path=None
+        self, model, encoder, temperature=0, policy="eps-greedy", model_path=None
     ):
         super().__init__()
         self.model = model
@@ -24,9 +24,9 @@ class ValueAgent(Agent):
             self.model.load_state_dict(torch.load(model_path))
 
     def predict(self, game_state):
-        encoder_state = self.encoder.encode(game_state)
-        input_tensor = torch.tensor([encoder_state]).to(self.device)
-        return self.model(input_tensor)[1]
+        encoded_state = np.array(self.encoder.encode(game_state))
+        board = torch.tensor(encoded_state, requires_grad=False).cuda().float()
+        return self.model(board)[1].detach().cpu().numpy()
 
     def set_buffer(self, buffer):
         self.buffer = buffer
@@ -57,7 +57,7 @@ class ValueAgent(Agent):
             ranked_moves = torch.flip(ranked_moves, [0])
         elif self.policy == "weighted":
             p = val / torch.sum(val)
-            p = torch.power(p, 1.0 / self.temperature)
+            p = torch.pow(p, 1.0 / self.temperature)
             p = p / torch.sum(p)
             ranked_moves = np.random.choice(
                 np.arange(0, len(val)), size=len(val), p=p.tolist(), replace=False

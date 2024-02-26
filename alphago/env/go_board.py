@@ -274,6 +274,9 @@ class Move:
         if self.is_resign:
             return "resign"
         return "(r %d, c %d)" % (self.point.row, self.point.col)
+    
+    def __repr__(self) -> str:
+        return self.__str__()
 
     def __hash__(self):
         return hash((self.is_play, self.is_pass, self.is_resign, self.point))
@@ -358,6 +361,9 @@ class GameState:
         return self.last_move.is_pass and second_last_move.is_pass
 
     def legal_moves(self):
+        if self.is_over():
+            print('we are here')
+            return []
         moves = []
         for row in range(1, self.board.num_rows + 1):
             for col in range(1, self.board.num_cols + 1):

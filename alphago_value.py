@@ -14,8 +14,8 @@ agent = ValueAgent(model, encoder, 0.01, model_path="experiment/weights/rlgo1.pt
 
 
 class cfg:
-    lr = 0.00001
-    epochs = 10
+    lr = 0.01
+    epochs = 1
     board_size = BOARD_SIZE
     batch_size = 128
 
