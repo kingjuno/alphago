@@ -362,7 +362,6 @@ class GameState:
 
     def legal_moves(self):
         if self.is_over():
-            print('we are here')
             return []
         moves = []
         for row in range(1, self.board.num_rows + 1):

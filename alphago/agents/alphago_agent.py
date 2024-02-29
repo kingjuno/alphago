@@ -2,6 +2,7 @@ import time
 
 import numpy as np
 
+from alphago.agents.add_ons import is_point_an_eye
 from alphago.agents.base import Agent
 from alphago.env.go_board import Move
 from alphago.env.utils import print_board
@@ -50,9 +51,9 @@ class AlphaGoMCTS(Agent):
         fast_policy_agent,
         value_agent,
         lambda_value=0.5,
-        num_simulations=100,
-        depth=15,
-        rollout_limit=30,
+        num_simulations=60,
+        depth=20,
+        rollout_limit=40,
     ):
         self.policy = policy_agent
         self.rollout_policy = fast_policy_agent
@@ -86,16 +87,23 @@ class AlphaGoMCTS(Agent):
 
             node.update_values(weighted_value)
 
-        move = max(
+        moves = sorted(
             self.root.children,
             key=lambda move: self.root.children.get(move).visit_count,
+            reverse=True,
         )
 
+        for i in moves:
+            if not is_point_an_eye(game_state.board, i.point, game_state.next_player):
+                move = i
+                break
+        else:
+            move = Move.pass_turn()
         self.root = AlphaGoNode()
         if move in self.root.children:
             self.root = self.root.children[move]
             self.root.parent = None
-        print(time.time() - start)
+        # print(time.time() - start)
         return move
 
     def policy_probabilities(self, game_state):

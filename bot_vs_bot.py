@@ -35,13 +35,14 @@ AGENTS = [
     agents.HumanAgent(), #0
     agents.DLAgent(model, encoder), #1
     agents.FastRandomBot(), #2
-    agents.MCTSAgent(100, 0.8), #3
+    agents.MCTSAgent(1000, 0.8), #3
     agents.PGAgent(model1, encoder, 0), #4
     agents.ValueAgent(model2, encoder, 0), #5
     agents.AlphaGoMCTS(
         agents.DLAgent(model, encoder),
-        agents.PGAgent(model1, encoder, 0),
-        agents.ValueAgent(model2, encoder, 0),
+        # agents.PGAgent(model1, encoder, 0),
+        agents.PGAgent(model1, encoder, 0.1),
+        agents.ValueAgent(model2, encoder, 0.1),
     )
 ]
 
@@ -59,17 +60,26 @@ def simulate_game(black_player, white_player):
     while not game.is_over():
         i += 1
         # print_board(game.board)
+        boards.append(encoder.encode(game))
         next_move = agents[game.next_player].select_move(game)
         game = game.apply_move(next_move)
         game_result = compute_game_result(game)
-        print(game_result)
+        # print(game_result)
     print(i)
     return game_result.winner
 
-
+boards = []
 wins = {gotypes.Player.black: 0, gotypes.Player.white: 0}
 for i in range(1):
-    winner = simulate_game(AGENTS[-1], AGENTS[1])
+    winner = simulate_game(AGENTS[2], copy.deepcopy(AGENTS[-1]))
     wins[winner] += 1
     print(wins)
 print(wins)
+
+import json
+boards = torch.tensor(boards)
+boards[::2] *= -1
+boards = boards.tolist()
+json_data = json.dumps(boards)
+with open('AlphavsMCTS.json', 'w') as f:
+    f.write(json_data)

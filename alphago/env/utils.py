@@ -5,7 +5,7 @@ import numpy as np
 
 from . import gotypes
 
-COLS = "ABCDEFGHJKLMNOPQRST"
+COLS = "ABCDEFGHIJKLMNOPQRST"
 STONE_TO_CHAR = {
     None: " . ",
     gotypes.Player.black: " x ",
